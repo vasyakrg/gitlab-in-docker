@@ -22,7 +22,7 @@ services:
       #   - "traefik.docker.network=webproxy"
       volumes:
         - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab:/home/git/data:Z
-        - ${SERVICE_DATA}/${SERVICE_NAME}/certs:/certs
+        - ./ssl-certs:/certs
       environment:
         - DEBUG=false
 
@@ -103,7 +103,7 @@ services:
       #   - "traefik.docker.network=webproxy"
       volumes:
         - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab/shared/registry:/registry
-        - ${SERVICE_DATA}/${SERVICE_NAME}/certs:/certs
+        - ./ssl-certs:/certs
       environment:
         - REGISTRY_AUTH_TOKEN_AUTOREDIRECT=false
         - REGISTRY_LOG_LEVEL=debug
