@@ -33,6 +33,10 @@ traefik можно поставить по этой [репке](https://github.
 
 `runner` - костомизирован только тем, что в нем встроена система авторегистрации на сервере.
 
+## Первый вход
+
+- root \ пароль указанный в переменной `GITLAB_ROOT_PASSWORD`
+
 ## Автор \ Author
 
 - **Vassiliy Yegorov** [vasyakrg](https://github.com/vasyakrg)
