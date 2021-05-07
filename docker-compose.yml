@@ -125,7 +125,7 @@ services:
         - DB_USER=${DB_USER}
         - DB_PASS=${DB_PASS}
         - DB_NAME=${DB_NAME}
-        - DB_EXTENSION=pg_trgm
+        - DB_EXTENSION=pg_trgm,btree_gist
       volumes:
         - ${SERVICE_DATA}/${SERVICE_NAME}/postgresql:/var/lib/postgresql:Z
       networks:

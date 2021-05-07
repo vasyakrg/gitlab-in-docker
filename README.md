@@ -1,12 +1,13 @@
-## Gitlab in docker
+# Gitlab in docker
 
 Полноценная сборка сервера Gitlab, его базы на psql, 4х раннеров и своего docker-registry, разворачеваемая на докер-хосте
 
-# Преподготовка
+## Преподготовка
+
 - нужен docker
 
 ```
-
+curl https://get.docker.com -o install.sh && sh install.sh
 ```
 
 - нужен docker-compose
@@ -25,6 +26,8 @@ curl -L "https://github.com/docker/compose/releases/download/1.29.1/docker-compo
 Подразумевается, что и гитлаб и регистри будут работать через один порт 443
 Подразумевается, что у вас уже есть webproxy или traefik, которые возьмут на себя ингрессы контейнеров и выдачу (обновление) им сертификатов
 (сеть webpоxy как раз комментирована по этому - ее надо будет раскоментировать по свои условия)
+
+traefik можно поставить по этой [репке](https://github.com/vasyakrg/traefik)
 
 `labels` у контейнеров подготовлены, если у вас traefik, раскомментите эти поля
 
