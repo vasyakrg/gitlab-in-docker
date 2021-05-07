@@ -1,0 +1,234 @@
+version: '3.7'
+
+services:
+    gitlab:
+      image: ${DOCKER_IMAGE_GITLAB}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_GITLAB}
+      restart: always
+      depends_on:
+        - postgresql
+        - redis
+      ports:
+        - "${GITLAB_SSH_PORT}:22"
+      expose:
+        - 80
+      # labels:
+      #   - "traefik.enable=true"
+      #   - "traefik.http.routers.gitlab-server.entrypoints=https"
+      #   - "traefik.http.routers.gitlab-server.rule=Host(`${GITLAB_HOST}`)"
+      #   - "traefik.http.routers.gitlab-server.tls=true"
+      #   - "traefik.http.routers.gitlab-server.tls.certresolver=letsEncrypt"
+      #   - "traefik.http.services.gitlab-server-service.loadbalancer.server.port=80"
+      #   - "traefik.docker.network=webproxy"
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab:/home/git/data:Z
+        - ${SERVICE_DATA}/${SERVICE_NAME}/certs:/certs
+      environment:
+        - DEBUG=false
+
+        - DB_ADAPTER=postgresql
+        - DB_HOST=${SERVICE_NAME}_${CONTAINER_NAME_PGSQL}
+        - DB_PORT=5432
+        - DB_USER=${DB_USER}
+        - DB_PASS=${DB_PASS}
+        - DB_NAME=${DB_NAME}
+
+        - REDIS_HOST=${SERVICE_NAME}_${CONTAINER_NAME_REDIS}
+        - REDIS_PORT=6379
+
+        - TZ=UTC
+        - GITLAB_TIMEZONE=${GITLAB_TIMEZONE}
+
+        - GITLAB_HTTPS=false
+        - SSL_SELF_SIGNED=false
+
+        - GITLAB_HOST=${GITLAB_HOST}
+        - GITLAB_PORT=80
+        - GITLAB_SSH_PORT=${GITLAB_SSH_PORT}
+        - GITLAB_SECRETS_DB_KEY_BASE=${GITLAB_SECRETS_DB_KEY_BASE}
+        - GITLAB_SECRETS_SECRET_KEY_BASE=${GITLAB_SECRETS_SECRET_KEY_BASE}
+        - GITLAB_SECRETS_OTP_KEY_BASE=${GITLAB_SECRETS_OTP_KEY_BASE}
+
+        - GITLAB_ROOT_PASSWORD=${GITLAB_ROOT_PASSWORD}
+        - GITLAB_ROOT_EMAIL=${GITLAB_ROOT_EMAIL}
+
+        - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+        - GITLAB_NOTIFY_PUSHER=false
+
+        - GITLAB_EMAIL=${GITLAB_EMAIL}
+        - GITLAB_EMAIL_REPLY_TO=${GITLAB_EMAIL_REPLY_TO}
+        - GITLAB_INCOMING_EMAIL_ADDRESS=${GITLAB_INCOMING_EMAIL_ADDRESS}
+
+        - GITLAB_PAGES_ENABLED=false
+
+        - SMTP_ENABLED=true
+        - SMTP_DOMAIN=${SMTP_DOMAIN}
+        - SMTP_HOST=${SMTP_HOST}
+        - SMTP_PORT=${SMTP_PORT}
+        - SMTP_USER=${SMTP_USER}
+        - SMTP_PASS=${SMTP_PASS}
+        - SMTP_STARTTLS=${SMTP_STARTTLS}
+        - SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION}
+
+        - IMAP_ENABLED=false
+        - LDAP_ENABLED=false
+
+        - GITLAB_REGISTRY_ENABLED=true
+        - GITLAB_REGISTRY_HOST=${REGISTRY_HOST}
+        - GITLAB_REGISTRY_API_URL=http://registry:5000/
+        - GITLAB_REGISTRY_KEY_PATH=/certs/registry.key
+      healthcheck:
+        test: ["CMD", "/usr/local/sbin/healthcheck"]
+        interval: 1m
+        timeout: 5s
+        retries: 5
+        start_period: 2m
+      networks:
+        # - webproxy
+        - service
+
+    registry:
+      image: ${DOCKER_IMAGE_REGISTRY}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_REGISTRY}
+      restart: always
+      expose:
+        - 5000
+      # labels:
+      #   - "traefik.enable=true"
+      #   - "traefik.http.routers.gitlab-registry.entrypoints=https"
+      #   - "traefik.http.routers.gitlab-registry.rule=Host(`${REGISTRY_HOST}`)"
+      #   - "traefik.http.routers.gitlab-registry.tls=true"
+      #   - "traefik.http.routers.gitlab-registry.tls.certresolver=letsEncrypt"
+      #   - "traefik.http.services.gitlab-registry-service.loadbalancer.server.port=5000"
+      #   - "traefik.docker.network=webproxy"
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab/shared/registry:/registry
+        - ${SERVICE_DATA}/${SERVICE_NAME}/certs:/certs
+      environment:
+        - REGISTRY_AUTH_TOKEN_AUTOREDIRECT=false
+        - REGISTRY_LOG_LEVEL=debug
+        - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry
+        - REGISTRY_AUTH_TOKEN_REALM=https://${GITLAB_HOST}/jwt/auth
+        - REGISTRY_AUTH_TOKEN_SERVICE=container_registry
+        - REGISTRY_AUTH_TOKEN_ISSUER=gitlab-issuer
+        - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/registry.crt
+        - REGISTRY_STORAGE_DELETE_ENABLED=true
+      networks:
+        # - webproxy
+        - service
+
+    postgresql:
+      image: ${DOCKER_IMAGE_PGSQL}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_PGSQL}
+      restart: always
+      environment:
+        - DB_USER=${DB_USER}
+        - DB_PASS=${DB_PASS}
+        - DB_NAME=${DB_NAME}
+        - DB_EXTENSION=pg_trgm
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/postgresql:/var/lib/postgresql:Z
+      networks:
+        - service
+
+    redis:
+      restart: always
+      image: ${DOCKER_IMAGE_REDIS}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_REDIS}
+      command:
+        - --loglevel warning
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/redis:/var/lib/redis:Z
+      networks:
+        - service
+
+    runner_1:
+      image: ${DOCKER_IMAGE_RUNNER}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_RUNNER}_1
+      restart: always
+      depends_on:
+        - gitlab
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab-runner_1:/etc/gitlab-runner
+        - /var/run/docker.sock:/var/run/docker.sock
+      command: --debug run --user=gitlab-runner --working-directory=/home/gitlab-runner
+      environment:
+        - CI_SERVER_URL=https://${GITLAB_HOST}
+        - CI_SERVER_LOCAL_IP=${CI_SERVER_LOCAL_IP}
+        - CI_SERVER_WITH_RUNNER=${CI_SERVER_WITH_RUNNER}
+        - RUNNER_TOKEN=${RUNNER_TOKEN}
+        - RUNNER_DESCRIPTION=gitab-runner_1
+        - RUNNER_EXECUTOR=docker
+        - DOCKER_IMAGE=gitlab/gitlab-runner-helper:x86_64-latest
+      networks:
+        - service
+
+    runner_2:
+      image: ${DOCKER_IMAGE_RUNNER}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_RUNNER}_2
+      restart: always
+      depends_on:
+        - gitlab
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab-runner_2:/etc/gitlab-runner
+        - /var/run/docker.sock:/var/run/docker.sock
+      command: --debug run --user=gitlab-runner --working-directory=/home/gitlab-runner
+      environment:
+        - CI_SERVER_URL=https://${GITLAB_HOST}
+        - CI_SERVER_WITH_RUNNER=${CI_SERVER_WITH_RUNNER}
+        - CI_SERVER_LOCAL_IP=${CI_SERVER_LOCAL_IP}
+        - RUNNER_TOKEN=${RUNNER_TOKEN}
+        - RUNNER_DESCRIPTION=gitab-runner_2
+        - RUNNER_EXECUTOR=docker
+        - DOCKER_IMAGE=gitlab/gitlab-runner-helper:x86_64-latest
+      networks:
+        - service
+
+    runner_3:
+      image: ${DOCKER_IMAGE_RUNNER}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_RUNNER}_3
+      restart: always
+      depends_on:
+        - gitlab
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab-runner_3:/etc/gitlab-runner
+        - /var/run/docker.sock:/var/run/docker.sock
+      command: --debug run --user=gitlab-runner --working-directory=/home/gitlab-runner
+      environment:
+        - CI_SERVER_URL=https://${GITLAB_HOST}
+        - CI_SERVER_WITH_RUNNER=${CI_SERVER_WITH_RUNNER}
+        - CI_SERVER_LOCAL_IP=${CI_SERVER_LOCAL_IP}
+        - RUNNER_TOKEN=${RUNNER_TOKEN}
+        - RUNNER_DESCRIPTION=gitab-runner_3
+        - RUNNER_EXECUTOR=docker
+        - DOCKER_IMAGE=gitlab/gitlab-runner-helper:x86_64-latest
+      networks:
+        - service
+
+    runner_4:
+      image: ${DOCKER_IMAGE_RUNNER}
+      container_name: ${SERVICE_NAME}_${CONTAINER_NAME_RUNNER}_4
+      restart: always
+      depends_on:
+        - gitlab
+      volumes:
+        - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab-runner_4:/etc/gitlab-runner
+        - /var/run/docker.sock:/var/run/docker.sock
+      command: --debug run --user=gitlab-runner --working-directory=/home/gitlab-runner
+      environment:
+        - CI_SERVER_URL=https://${GITLAB_HOST}
+        - CI_SERVER_WITH_RUNNER=${CI_SERVER_WITH_RUNNER}
+        - CI_SERVER_LOCAL_IP=${CI_SERVER_LOCAL_IP}
+        - RUNNER_TOKEN=${RUNNER_TOKEN}
+        - RUNNER_DESCRIPTION=gitab-runner_4
+        - RUNNER_EXECUTOR=docker
+        - DOCKER_IMAGE=gitlab/gitlab-runner-helper:x86_64-latest
+      networks:
+       - service
+
+networks:
+    service:
+        name: ${SERVICE_NAME}
+    # webproxy:
+    #     external:
+    #         name: ${WEBPROXY_NETWORK}
