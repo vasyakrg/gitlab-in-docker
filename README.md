@@ -29,22 +29,24 @@ traefik можно поставить по этой [репке](https://github.
 я размещаю папки так:
 /src/services/cfg
  - gitlab
- - traefig
+
 /srv/services/data
  - gitlab
+ - gitlab/certs
 
 ## Запуск
 
 1. переименовываем `.env.example` в `.env`
 2. заполняем по максимому внимательно все переменные (кроме `RUNNER_TOKEN=`)
-3. распаковываем в папке ssl-certs сертификаты и кладем там же (сертификаты noname и нужны лишь для внутреннего взаимодействия между gitlab и registry компонентами). Убедитесь что на всех ключах выставлены права в 0644
+3. распаковываем в папке ssl-certs сертификаты и кладем в поинт, где хранятся данные (у меня это /srv/services/data/gitlab/certs) (сертификаты noname и нужны лишь для внутреннего взаимодействия между gitlab и registry компонентами).
+3.1 Убедитесь что на всех ключах выставлены права в 0644
 4. запускаем сборку `docker-compose up -d`
 5. когда сервер запустится, вы войдете в систему под рутом, надо сходить в раздел раннеров (/admin/runners) и подсмотреть там токен, который и нужно будет заполнить в переменной `RUNNER_TOKEN=` и снова запустить `docker-compose up -d`, после чего раннеры перезапустятся и зарегистрируються в системе.
 
-Если некоторые из 4х раннеров ушли в ошибку `is not healthy and will be disabled!`, то нужно:
+Если некоторые из 4х раннеров ушли в ошибку `is not healthy and will be disabled!`, то нужно (на примере второго раннера):
 - `docker-compose stop runner_2`
 - `docker-compose rm runner_2`
-- `rm /srv/services/data/gitlab/gitlab-runner_3/config.toml`
+- `rm /srv/services/data/gitlab/gitlab-runner_2/config.toml`
 - `docker-compose up -d`
 
 То есть, останавливаем и удаляем контейнер. Удаляем конфиг и перезапускаем весь компоуз.
