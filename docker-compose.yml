@@ -61,17 +61,29 @@ services:
 
         - GITLAB_PAGES_ENABLED=false
 
-        - SMTP_ENABLED=true
-        - SMTP_DOMAIN=${SMTP_DOMAIN}
-        - SMTP_HOST=${SMTP_HOST}
-        - SMTP_PORT=${SMTP_PORT}
-        - SMTP_USER=${SMTP_USER}
-        - SMTP_PASS=${SMTP_PASS}
-        - SMTP_STARTTLS=${SMTP_STARTTLS}
-        - SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION}
+        - SMTP_ENABLED=${SMTP_ENABLED}
+        # - SMTP_DOMAIN=${SMTP_DOMAIN}
+        # - SMTP_HOST=${SMTP_HOST}
+        # - SMTP_PORT=${SMTP_PORT}
+        # - SMTP_USER=${SMTP_USER}
+        # - SMTP_PASS=${SMTP_PASS}
+        # - SMTP_STARTTLS=${SMTP_STARTTLS}
+        # - SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION}
 
         - IMAP_ENABLED=false
-        - LDAP_ENABLED=false
+
+        - LDAP_ENABLED=${LDAP_ENABLED}
+        # - LDAP_LABEL=LDAP
+        # - LDAP_HOST=id1.domain.com
+        # - LDAP_PORT=636
+        # - LDAP_UID=uid
+        # - LDAP_METHOD=simple_tls
+        # - LDAP_VERIFY_SSL=true
+        # - LDAP_ACTIVE_DIRECTORY=false
+        # - LDAP_BASE=cn=users,cn=accounts,dc=id,dc=domain,dc=com
+        # - LDAP_USER_FILTER=(&(objectClass=posixaccount)(memberOf=cn=gitlab,cn=groups,cn=accounts,dc=id,dc=domain,dc=com))
+        # - LDAP_BIND_DN=uid=binddn,cn=sysaccounts,cn=etc,dc=id,dc=domain,dc=com
+        # - LDAP_PASS=${LDAP_PASS}
 
         - GITLAB_REGISTRY_ENABLED=true
         - GITLAB_REGISTRY_HOST=${REGISTRY_HOST}
@@ -225,6 +237,27 @@ services:
         - DOCKER_IMAGE=gitlab/gitlab-runner-helper:x86_64-latest
       networks:
        - service
+
+    # backup:
+    #   image: ${DOCKER_IMAGE_BACKUP}
+    #   restart: always
+    #   container_name: ${SERVICE_NAME}_${CONTAINER_NAME_BACKUP}
+    #   command: gitlab backup --storage S3://<BACKBLAZE-MOUNT-POINT>/gitlab --online
+    #   volumes:
+    #     - /var/run/docker.sock:/var/run/docker.sock
+    #     - ${SERVICE_DATA}/${SERVICE_NAME}/gitlab/backups:${BACKUP_DIR}:Z
+    #     - ${DOCKER_COMPOSE_DIR}:${DOCKER_COMPOSE_DIR}
+    #   environment:
+    #     - BACKUP_SCHEDULE=${BACKUP_SCHEDULE}
+    #     - BACKUP_DIR=${BACKUP_DIR}
+    #     - DOCKER_COMPOSE_DIR=${DOCKER_COMPOSE_DIR}
+    #     - SERVICE_NAME=${SERVICE_NAME}
+    #     - CONTAINER_NAME_GITLAB=${CONTAINER_NAME_GITLAB}
+    #     - S3_HOST_BASE=${S3_HOST_BASE}
+    #     - S3_ACCOUNT_ID=${S3_ACCOUNT_ID}
+    #     - S3_APPLICATION_KEY=${S3_APPLICATION_KEY}
+    #   networks:
+    #     - service
 
 networks:
     service:
