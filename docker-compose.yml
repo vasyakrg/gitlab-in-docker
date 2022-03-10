@@ -75,17 +75,17 @@ services:
         - IMAP_ENABLED=false
 
         - LDAP_ENABLED=${LDAP_ENABLED}
-        # - LDAP_LABEL=LDAP
-        # - LDAP_HOST=id1.domain.com
-        # - LDAP_PORT=636
-        # - LDAP_UID=uid
-        # - LDAP_METHOD=simple_tls
-        # - LDAP_VERIFY_SSL=true
-        # - LDAP_ACTIVE_DIRECTORY=false
-        # - LDAP_BASE=cn=users,cn=accounts,dc=id,dc=domain,dc=com
-        # - LDAP_USER_FILTER=(&(objectClass=posixaccount)(memberOf=cn=gitlab,cn=groups,cn=accounts,dc=id,dc=domain,dc=com))
-        # - LDAP_BIND_DN=uid=binddn,cn=sysaccounts,cn=etc,dc=id,dc=domain,dc=com
-        # - LDAP_PASS=${LDAP_PASS}
+        - LDAP_LABEL=${LDAP_LABEL}
+        - LDAP_HOST=${LDAP_HOST}
+        - LDAP_PORT=${LDAP_PORT}
+        - LDAP_UID=${LDAP_UID}
+        - LDAP_METHOD=${LDAP_METHOD}
+        - LDAP_VERIFY_SSL=${LDAP_VERIFY_SSL}
+        - LDAP_ACTIVE_DIRECTORY=${LDAP_ACTIVE_DIRECTORY}
+        - LDAP_BASE=${LDAP_BASE}
+        - LDAP_USER_FILTER=${LDAP_USER_FILTER}
+        - LDAP_BIND_DN=${LDAP_BIND_DN}
+        - LDAP_PASS=${LDAP_PASS}
 
         - GITLAB_REGISTRY_ENABLED=true
         - GITLAB_REGISTRY_HOST=${REGISTRY_HOST}
