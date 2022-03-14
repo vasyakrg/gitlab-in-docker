@@ -270,7 +270,7 @@ services:
 
 networks:
     service:
-        name: ${SERVICE_NAME}
+        name: ${SERVICE_NETWORK}
     webproxy:
         external:
             name: ${WEBPROXY_NETWORK}
