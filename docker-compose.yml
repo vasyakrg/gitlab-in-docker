@@ -272,5 +272,4 @@ networks:
     service:
         name: ${SERVICE_NETWORK}
     webproxy:
-        external:
-            name: ${WEBPROXY_NETWORK}
+        external: true
