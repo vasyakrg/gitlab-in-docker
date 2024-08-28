@@ -143,9 +143,9 @@ services:
       container_name: ${SERVICE_NAME}_${CONTAINER_NAME_PGSQL}
       restart: always
       environment:
-        - DB_USER=${DB_USER}
-        - DB_PASS=${DB_PASS}
-        - DB_NAME=${DB_NAME}
+        - POSTGRES_USER=${DB_USER}
+        - POSTGRES_PASSWORD=${DB_PASS}
+        - POSTGRES_DB=${DB_NAME}
         - DB_EXTENSION=pg_trgm,btree_gist
       volumes:
         - ${SERVICE_DATA}/${SERVICE_NAME}/postgresql:/var/lib/postgresql:Z
