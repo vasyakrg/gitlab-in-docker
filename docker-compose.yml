@@ -146,7 +146,7 @@ services:
         - POSTGRES_USER=${DB_USER}
         - POSTGRES_PASSWORD=${DB_PASS}
         - POSTGRES_DB=${DB_NAME}
-        - DB_EXTENSION=pg_trgm,btree_gist
+        - POSTGRESQL_SHARED_PRELOAD_LIBRARIES=pg_trgm,btree_gist
       volumes:
         - ${SERVICE_DATA}/${SERVICE_NAME}/postgresql:/var/lib/postgresql:Z
       networks:
